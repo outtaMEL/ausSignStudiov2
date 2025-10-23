@@ -4,7 +4,7 @@
 
 import { create } from 'zustand'
 import { SignDocument, PanelInput, TemplateParams, EngineParams, LayoutModel } from '@/lib/types'
-import { DEFAULT_TEMPLATE, DEFAULT_ENGINE, DEFAULT_G11_PANELS, DEFAULT_G12_PANELS, getDefaultDocumentName } from '@/lib/defaults'
+import { DEFAULT_TEMPLATE, DEFAULT_ENGINE, DEFAULT_G11_PANELS, DEFAULT_G12_PANELS, EMPTY_PANEL, getDefaultDocumentName } from '@/lib/defaults'
 import { computeLayout } from '@/lib/engine'
 import { generateId, deepClone } from '@/lib/utils'
 

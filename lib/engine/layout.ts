@@ -165,7 +165,7 @@ function layoutSinglePanel(
         data:
           roadNumType === 'shield'
             ? { shieldLabel: shieldLabel }
-            : { text: roadNumber, ascent_h: roadNumBox.ascent_h },
+            : { text: roadNumber, ascent_h: (roadNumBox as RoadNumberBox).ascent_h },
       })
     }
 
@@ -188,7 +188,7 @@ function layoutSinglePanel(
         data:
           roadNumType === 'shield'
             ? { shieldLabel: shieldLabel }
-            : { text: roadNumber, ascent_h: roadNumBox.ascent_h },
+            : { text: roadNumber, ascent_h: (roadNumBox as RoadNumberBox).ascent_h },
       })
     }
 
