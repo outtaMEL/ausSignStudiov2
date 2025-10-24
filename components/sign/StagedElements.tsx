@@ -43,7 +43,8 @@ function DraggableElement({
 
   const style = {
     transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.3 : 1,
+    transition: 'opacity 150ms ease',
   }
 
   // Generate simple SVG preview
@@ -234,12 +235,14 @@ interface StagedElementsProps {
   elements: StagedElement[]
   onDelete?: (id: string) => void
   onDuplicate?: (id: string) => void
+  isDraggingToStaging?: boolean
 }
 
 export function StagedElements({
   elements,
   onDelete,
   onDuplicate,
+  isDraggingToStaging = false,
 }: StagedElementsProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: 'staging-area',
@@ -247,6 +250,9 @@ export function StagedElements({
       type: 'staging-area',
     },
   })
+  
+  // 高亮staging area当拖拽回来时
+  const shouldHighlight = isOver || isDraggingToStaging
 
   const getElementIcon = (type: string) => {
     // 根据类型返回不同的图标颜色
@@ -301,8 +307,8 @@ export function StagedElements({
       {/* Content */}
       <div 
         ref={setNodeRef}
-        className={`flex-1 overflow-auto p-4 transition-colors ${
-          isOver ? 'bg-green-50 ring-2 ring-inset ring-green-400' : ''
+        className={`flex-1 overflow-auto p-4 transition-all duration-200 ${
+          shouldHighlight ? 'bg-green-50 ring-2 ring-inset ring-green-400' : ''
         }`}
       >
         {elements.length === 0 ? (

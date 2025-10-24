@@ -210,27 +210,49 @@ Browser: Download File
 
 ## 组件层次
 
+### 快速模式（Playground）
 ```
-App
-├── HomePage
-│   ├── Header
-│   ├── HeroSection
-│   └── RecentDocuments
-│
-├── EditorPage
-│   ├── EditorHeader
-│   ├── PanelEditor (Left Sidebar)
-│   │   └── PanelCard[]
-│   ├── SignCanvas (Center)
-│   │   ├── CanvasToolbar
-│   │   └── SVGDisplay
-│   └── SettingsPanel (Right Sidebar)
-│       ├── PropertiesTab
-│       ├── TemplateEditor
-│       └── EngineEditor
-│
-└── LibraryPage (Future)
+PlaygroundPage
+├── Header
+├── PanelEditor (左侧)
+│   └── PanelCard[]
+├── SignCanvas (中央)
+│   └── SVGDisplay (自动生成)
+└── SettingsPanel (右侧)
+    ├── PropertiesTab
+    ├── TemplateEditor
+    └── EngineEditor
 ```
+
+### 手动模式（Editor）
+```
+EditorPage
+├── Header
+│   └── BackButton
+├── ResizableThreeColumn (可调整三列)
+│   ├── ElementLibrary (左列)
+│   │   └── ElementTemplates
+│   ├── StagedElements (中列)
+│   │   └── StagedElement[] (拖拽暂存区)
+│   └── SimpleManualCanvas (右列)
+│       ├── Board背景
+│       ├── PlacedElement[] (已放置元素)
+│       ├── BackToStagingHandle (拖回手柄)
+│       └── SpacingWarning (间距警告)
+└── DragOverlay (拖拽预览)
+```
+
+### 手动模式画布实现
+
+**SimpleManualCanvas** - 使用原生鼠标事件实现精确拖拽：
+- ✅ 原生mousedown/mousemove/mouseup事件
+- ✅ SVG坐标转换（createSVGPoint + getScreenCTM）
+- ✅ 实时移动反馈（透明度变化）
+- ✅ 双向拖拽支持（与@dnd-kit配合）
+- ✅ 边界检查和碰撞检测
+
+**ManualCanvas** - 使用@dnd-kit的旧版实现（已弃用）：
+- ⚠️ 保留用于参考，但不再在Editor中使用
 
 ## 扩展指南
 

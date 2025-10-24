@@ -2,7 +2,27 @@
 
 本文档记录了ausSignStudio v2开发过程中的所有重要修复和改进。
 
-## 📅 2024-10-24 修复汇总
+> **注意**: 本文档记录历史修复。最新的实现细节请查看 [MANUAL_MODE_DRAG.md](./MANUAL_MODE_DRAG.md)
+
+## 📅 2025-10-24 v2.0 重大重构
+
+### ✅ 手动模式拖拽系统重构
+**问题**: ManualCanvas使用@dnd-kit导致拖拽不准确  
+**解决**: 创建SimpleManualCanvas，使用原生鼠标事件  
+**影响**:
+- Canvas内拖拽完全准确
+- SVG坐标转换无偏差
+- 性能显著提升
+
+### ✅ 文档整合
+**问题**: 三个重复的拖拽文档（BIDIRECTIONAL_DRAG.md, DRAG_AND_DROP_UX.md, SIMPLE_DRAG_IMPLEMENTATION.md）  
+**解决**: 整合为单一文档MANUAL_MODE_DRAG.md  
+**改进**:
+- 减少文档冗余
+- 统一术语和描述
+- 添加完整的技术架构说明
+
+## 📅 2024-10-24 初始开发修复汇总
 
 ### ✅ 核心修复
 
@@ -86,16 +106,13 @@ const y = element.box.y * pxPerH
 ### ⚠️ 已知问题和改进计划
 
 #### 拖拽性能优化（Phase 5计划）
-**当前问题**:
-- 拖拽过程中可能出现轻微延迟
-- 元素在拖拽时可能出现"跳跃"
+**已解决** (v2.0):
+- ✅ 使用SimpleManualCanvas替代旧的ManualCanvas
+- ✅ 原生鼠标事件实现精确拖拽
+- ✅ DragOverlay已实现用于跨区域拖拽
+- ✅ SVG坐标转换准确无误
 
-**计划解决方案**:
-- 实现 DragOverlay 组件
-- 使用 GPU 加速的 CSS transform
-- 优化坐标计算链
-
-**优先级**: 中等（功能正常但可改进）
+**优先级**: 已完成
 
 ## 📊 修复统计
 

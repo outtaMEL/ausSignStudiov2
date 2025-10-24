@@ -14,28 +14,20 @@ import {
   ResizableThreeColumn,
   ElementLibrary,
   StagedElements,
-  ManualCanvas,
-  AlignmentGuide,
-  QuickAlignButtons,
   SpacingWarning,
 } from '@/components/sign'
-import { DndContext, DragEndEvent, DragStartEvent, DragMoveEvent } from '@dnd-kit/core'
-import { ElementType, ElementConfig, PlacedElement } from '@/lib/types'
-import { detectAlignmentOpportunities, validateSpacing } from '@/lib/engine/manual'
+import { SimpleManualCanvas } from '@/components/sign/SimpleManualCanvas'
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core'
+import { ElementType, ElementConfig, PlacedElement, StagedElement } from '@/lib/types'
+import { validateSpacing } from '@/lib/engine/manual'
 
 export default function EditorPage() {
   const router = useRouter()
   const document = useCurrentDocument()
   const actions = useActions()
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
-  const [hoveredElementId, setHoveredElementId] = useState<string | null>(null)
-  const [draggingElement, setDraggingElement] = useState<PlacedElement | null>(null)
-  const [alignmentLines, setAlignmentLines] = useState<Array<{
-    type: 'horizontal' | 'vertical'
-    position: number
-    elementIds: string[]
-    alignmentPoint: string
-  }>>([])
+  const [draggingStagedElement, setDraggingStagedElement] = useState<StagedElement | null>(null)
+  const [draggingBackToStaging, setDraggingBackToStaging] = useState<string | null>(null)
   const [spacingViolations, setSpacingViolations] = useState<Array<{
     elem1Id: string
     elem2Id: string
@@ -81,54 +73,74 @@ export default function EditorPage() {
     )
   }
 
-  // 处理拖拽开始
+  // 开始拖拽
   const handleDragStart = (event: DragStartEvent) => {
     const activeData = event.active.data.current
-    if (activeData?.type === 'placed-element') {
-      setDraggingElement(activeData.element)
+    if (activeData?.type === 'staged-element') {
+      setDraggingStagedElement(activeData.element)
+    }
+    if (activeData?.type === 'canvas-to-staging') {
+      setDraggingBackToStaging(activeData.elementId)
     }
   }
 
-  // 处理拖拽结束
+  // 处理从暂存区拖拽元素
   const handleDragEnd = (event: DragEndEvent) => {
-    setAlignmentLines([])
-    setDraggingElement(null)
-    
     const { active, over } = event
-    if (!over || !document) return
+    setDraggingStagedElement(null)
+    setDraggingBackToStaging(null)
+    
+    if (!document) return
 
     const activeData = active.data.current
 
-    // 从暂存区拖到画布（使用SVG坐标）
-    if (activeData?.type === 'staged-element' && over.id === 'manual-canvas') {
+    // 从暂存区拖拽到画布：放置到鼠标位置
+    if (activeData?.type === 'staged-element' && over?.id === 'simple-canvas-drop-zone') {
       const element = activeData.element
       
-      // 使用SVG坐标转换
-      const svgEl = window.document.querySelector('svg[data-board-canvas]') as SVGSVGElement
-      if (!svgEl) {
-        // Fallback: 放置在中心
-        const centerX = document.manualData!.boardSize.w / 2 - element.preview.w / 2
-        const centerY = document.manualData!.boardSize.h / 2 - element.preview.h / 2
-        actions.placeElement(element.id, { x: centerX, y: centerY })
-        setTimeout(() => actions.regenerateManualLayout(), 10)
-        return
+      // 尝试获取SVG元素并转换鼠标坐标
+      const canvasContainer = window.document.querySelector('[data-canvas-container]')
+      const svgEl = canvasContainer?.querySelector('svg') as SVGSVGElement
+      
+      let targetX = document.manualData!.boardSize.w / 2 - element.preview.w / 2
+      let targetY = document.manualData!.boardSize.h / 2 - element.preview.h / 2
+      
+      if (svgEl && event.activatorEvent) {
+        try {
+          const mouseEvent = event.activatorEvent as PointerEvent
+          const pt = svgEl.createSVGPoint()
+          
+          // 使用当前鼠标位置（不是起始位置）
+          pt.x = mouseEvent.clientX
+          pt.y = mouseEvent.clientY
+          const svgPt = pt.matrixTransform(svgEl.getScreenCTM()!.inverse())
+          
+          // 以元素中心对齐鼠标位置
+          targetX = svgPt.x - element.preview.w / 2
+          targetY = svgPt.y - element.preview.h / 2
+        } catch (e) {
+          console.warn('SVG coordinate conversion failed, using center position')
+        }
       }
-
-      // 获取鼠标位置并转换为SVG坐标（h空间）
-      const mouseEvent = event.activatorEvent as MouseEvent
-      const pt = svgEl.createSVGPoint()
-      pt.x = mouseEvent.clientX + (event.delta?.x || 0)
-      pt.y = mouseEvent.clientY + (event.delta?.y || 0)
-      const svgPt = pt.matrixTransform(svgEl.getScreenCTM()!.inverse())
-
-      actions.placeElement(element.id, { x: svgPt.x, y: svgPt.y })
+      
+      // 确保在board范围内
+      targetX = Math.max(0, Math.min(targetX, document.manualData!.boardSize.w - element.preview.w))
+      targetY = Math.max(0, Math.min(targetY, document.manualData!.boardSize.h - element.preview.h))
+      
+      actions.placeElement(element.id, { x: targetX, y: targetY })
       setTimeout(() => actions.regenerateManualLayout(), 10)
     }
 
     // 从画布拖回暂存区
-    if (activeData?.type === 'placed-element' && over.id === 'staging-area') {
-      actions.moveElementBack(active.id as string)
+    if (activeData?.type === 'canvas-to-staging' && over?.id === 'staging-area') {
+      const elementId = activeData.elementId
+      actions.moveElementBack(elementId)
     }
+  }
+  
+  // 处理画布内元素移动
+  const handleElementMove = (elementId: string, newX: number, newY: number) => {
+    actions.moveElement(elementId, { x: newX, y: newY })
   }
 
   // 创建元素
@@ -154,36 +166,49 @@ export default function EditorPage() {
 
       {/* Main Content - 三列布局 */}
       <div className="flex-1 overflow-hidden">
-        <DndContext 
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
+        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <ResizableThreeColumn
             columnOne={
               <ElementLibrary onCreateElement={handleCreateElement} />
             }
             columnTwo={
-              <StagedElements
-                elements={document.manualData.staged}
-                onDelete={(id) => actions.deleteElement(id, 'staged')}
-                onDuplicate={(id) => actions.duplicateElement(id, 'staged')}
-              />
+              <div className="h-full relative">
+                <StagedElements
+                  elements={document.manualData.staged}
+                  onDelete={(id) => actions.deleteElement(id, 'staged')}
+                  onDuplicate={(id) => actions.duplicateElement(id, 'staged')}
+                  isDraggingToStaging={!!draggingBackToStaging}
+                />
+                
+                {/* Drop hint when dragging back to staging */}
+                {draggingBackToStaging && (
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-green-500/5 animate-in fade-in">
+                    <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-xl text-sm font-medium animate-in zoom-in-95 duration-200">
+                      ← Release to move back to staging ←
+                    </div>
+                  </div>
+                )}
+              </div>
             }
             columnThree={
               <div className="h-full relative">
-                <ManualCanvas
+                <SimpleManualCanvas
                   elements={document.manualData.placed}
                   boardSize={document.manualData.boardSize}
+                  onElementMove={handleElementMove}
                   onElementClick={(id) => setSelectedElementId(id)}
+                  onMoveBackToStaging={(id) => actions.moveElementBack(id)}
                   selectedElementId={selectedElementId}
-                  hoveredElementId={hoveredElementId}
-                  onElementHover={(id) => setHoveredElementId(id)}
-                  alignmentLines={alignmentLines}
-                  onQuickAlign={(id, direction) => {
-                    actions.alignToBoard(id, direction)
-                    setTimeout(() => actions.regenerateManualLayout(), 10)
-                  }}
                 />
+                
+                {/* Drop hint when dragging */}
+                {draggingStagedElement && (
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-blue-500/5 transition-all duration-200 animate-in fade-in">
+                    <div className="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-xl text-sm font-medium animate-in zoom-in-95 duration-200">
+                      ↓ Release to place element at center ↓
+                    </div>
+                  </div>
+                )}
                 
                 {/* Spacing Warnings Overlay */}
                 {spacingViolations.length > 0 && (
@@ -197,6 +222,38 @@ export default function EditorPage() {
               </div>
             }
           />
+          
+          {/* Drag Overlay - 拖拽时跟随鼠标的预览 */}
+          <DragOverlay dropAnimation={null}>
+            {draggingStagedElement ? (
+              <div className="bg-white rounded-lg shadow-2xl p-4 border-2 border-blue-500 opacity-90">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                  <div>
+                    <div className="font-bold text-sm capitalize">{draggingStagedElement.type}</div>
+                    <div className="text-xs text-gray-500">
+                      {draggingStagedElement.config.text || 
+                       draggingStagedElement.config.label || 
+                       'Element'}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-gray-400">
+                  {draggingStagedElement.preview.w.toFixed(1)} × {draggingStagedElement.preview.h.toFixed(1)} h
+                </div>
+              </div>
+            ) : draggingBackToStaging ? (
+              <div className="bg-white rounded-lg shadow-2xl p-4 border-2 border-green-500 opacity-90">
+                <div className="flex items-center gap-3">
+                  <ArrowLeft className="w-5 h-5 text-green-500 animate-pulse" />
+                  <div>
+                    <div className="font-bold text-sm text-green-700">Moving to Staging</div>
+                    <div className="text-xs text-gray-500">Release over staging area</div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </DragOverlay>
         </DndContext>
       </div>
     </div>

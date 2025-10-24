@@ -8,6 +8,7 @@ export { ResizableThreeColumn } from './ResizableThreeColumn'
 export { ElementLibrary } from './ElementLibrary'
 export { StagedElements } from './StagedElements'
 export { ManualCanvas } from './ManualCanvas'
+export { SimpleManualCanvas } from './SimpleManualCanvas'
 export { ElementConfigDialog } from './ElementConfigDialog'
 
 // Phase 5: 对齐系统

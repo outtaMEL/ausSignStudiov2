@@ -22,6 +22,7 @@ interface ManualCanvasProps {
     alignmentPoint: string
   }>
   onQuickAlign?: (id: string, direction: 'left' | 'right' | 'center' | 'top' | 'bottom' | 'middle') => void
+  showDebugInfo?: boolean // 可选：显示调试信息
 }
 
 // 可拖拽元素组件
@@ -31,12 +32,14 @@ function DraggablePlacedElement({
   isHovered,
   onClick,
   onHover,
+  showDebugInfo,
 }: {
   element: PlacedElement
   isSelected: boolean
   isHovered: boolean
   onClick: () => void
   onHover: (hover: boolean) => void
+  showDebugInfo?: boolean
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: element.id,
@@ -56,6 +59,37 @@ function DraggablePlacedElement({
 
   return (
     <g opacity={isDragging ? 0.5 : 1}>
+      {/* Selection highlight - 更明显的选中效果 */}
+      {isSelected && (
+        <rect
+          x={safeBox.x - 0.15}
+          y={safeBox.y - 0.15}
+          width={safeBox.w + 0.3}
+          height={safeBox.h + 0.3}
+          fill="none"
+          stroke="#2563EB"
+          strokeWidth="0.1"
+          opacity={0.8}
+          pointerEvents="none"
+          rx="0.2"
+        />
+      )}
+      
+      {/* Hover highlight - 悬停效果 */}
+      {isHovered && !isSelected && (
+        <rect
+          x={safeBox.x - 0.1}
+          y={safeBox.y - 0.1}
+          width={safeBox.w + 0.2}
+          height={safeBox.h + 0.2}
+          fill="#60A5FA"
+          fillOpacity="0.15"
+          stroke="none"
+          pointerEvents="none"
+          rx="0.15"
+        />
+      )}
+      
       {/* Element content */}
       {element.type === 'text' && (
         <text
@@ -209,10 +243,8 @@ function DraggablePlacedElement({
         width={safeBox.w}
         height={safeBox.h}
         fill="transparent"
-        stroke={isSelected ? '#2563EB' : isHovered ? '#60A5FA' : '#93C5FD'}
-        strokeWidth="0.04"
-        strokeDasharray={isSelected ? '0.2 0.1' : '0.15 0.15'}
-        strokeOpacity={isSelected ? 0.9 : isHovered ? 0.7 : 0.4}
+        stroke="transparent"
+        strokeWidth="0.02"
         style={{ cursor: 'move' }}
         onClick={onClick}
         onMouseEnter={() => onHover(true)}
@@ -220,6 +252,50 @@ function DraggablePlacedElement({
         {...listeners}
         {...attributes}
       />
+      
+      {/* 始终显示的轻微边框，帮助识别可交互元素 */}
+      {!isSelected && !isHovered && (
+        <rect
+          x={safeBox.x}
+          y={safeBox.y}
+          width={safeBox.w}
+          height={safeBox.h}
+          fill="none"
+          stroke="#93C5FD"
+          strokeWidth="0.02"
+          strokeDasharray="0.15 0.15"
+          strokeOpacity="0.3"
+          pointerEvents="none"
+        />
+      )}
+      
+      {/* Debug info - 显示元素类型 */}
+      {showDebugInfo && (
+        <g>
+          <rect
+            x={safeBox.x}
+            y={safeBox.y - 0.35}
+            width={1.5}
+            height={0.3}
+            fill="#1F2937"
+            opacity="0.9"
+            rx="0.05"
+            pointerEvents="none"
+          />
+          <text
+            x={safeBox.x + 0.75}
+            y={safeBox.y - 0.15}
+            textAnchor="middle"
+            fontSize="0.18"
+            fill="white"
+            fontFamily="monospace"
+            fontWeight="bold"
+            pointerEvents="none"
+          >
+            {element.type}
+          </text>
+        </g>
+      )}
     </g>
   )
 }
@@ -232,6 +308,7 @@ export function ManualCanvas({
   hoveredElementId,
   onElementHover,
   alignmentLines = [],
+  showDebugInfo = false,
 }: ManualCanvasProps) {
   const pxPerH = 100 // 固定缩放
   
@@ -322,6 +399,7 @@ export function ManualCanvas({
                 isHovered={element.id === hoveredElementId}
                 onClick={() => onElementClick?.(element.id)}
                 onHover={(hover) => onElementHover?.(hover ? element.id : null)}
+                showDebugInfo={showDebugInfo}
               />
             ))}
           </svg>
