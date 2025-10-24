@@ -147,9 +147,15 @@ import type { SignDocument, LayoutModel } from '@/lib/types'
 
 ## 📖 文档
 
-- **README.md** - 完整的英文文档
-- **ARCHITECTURE.md** - 详细架构说明
-- **HOW_TO_TEST_ENGINE.md** - 引擎测试指南
+完整的技术文档请查看 [docs/](./docs/) 目录：
+
+- **[架构文档](./docs/ARCHITECTURE.md)** - 系统架构和设计理念
+- **[开发历史](./docs/DEVELOPMENT_HISTORY.md)** - Phase 1-6 完整开发记录
+- **[修复记录](./docs/DEVELOPMENT_FIXES.md)** - 所有修复和改进汇总
+- **[项目状态](./docs/PROJECT_STATUS.md)** - 当前完成度和生产就绪评估
+- **[测试指南](./docs/HOW_TO_TEST_ENGINE.md)** - 如何测试引擎功能
+- **[贡献指南](./docs/CONTRIBUTING.md)** - 文档贡献规范
+- **[README.md](./README.md)** - 完整的英文文档
 
 ## 🎨 技术栈
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -10,7 +11,8 @@ import { Slider } from '@/components/ui/slider'
 import { computeLayout, toSVG, downloadSVG } from '@/lib/engine'
 import { DEFAULT_TEMPLATE, DEFAULT_FONT_METRICS } from '@/lib/defaults'
 import { LayoutModel, PanelInput, ShieldType, DirectionType } from '@/lib/types'
-import { Download, FileJson } from 'lucide-react'
+import { Download, FileJson, Edit3 } from 'lucide-react'
+import { useActions } from '@/store/signStore'
 
 /**
  * 🧪 Playground - Standalone D1-D4 Engine Testing
@@ -22,6 +24,9 @@ import { Download, FileJson } from 'lucide-react'
  * 4. Fully independent from main app state
  */
 export default function PlaygroundPage() {
+  const router = useRouter()
+  const actions = useActions()
+  
   // Panel inputs (matching old project defaults)
   const [panels, setPanels] = useState<PanelInput[]>([
     {
@@ -56,7 +61,7 @@ export default function PlaygroundPage() {
   const [template, setTemplate] = useState(DEFAULT_TEMPLATE)
 
   // Engine parameters
-  const [pxPerH, setPxPerH] = useState(30)
+  const [pxPerH, setPxPerH] = useState(100)
 
   // Font metrics
   const [fontMetrics, setFontMetrics] = useState(DEFAULT_FONT_METRICS)
@@ -126,6 +131,34 @@ export default function PlaygroundPage() {
     a.click()
     URL.revokeObjectURL(url)
   }
+  
+  // Switch to Manual Mode
+  const handleSwitchToManual = () => {
+    if (!layout) return
+    
+    const cleanedPanels = panels.map(panel => ({
+      ...panel,
+      destinations: panel.destinations.filter(d => d.trim())
+    }))
+    
+    // 创建新document（mode='quick'，稍后切换）
+    actions.createDocument('G1-1', 'My Sign', 'quick')
+    
+    // 更新document的panels和参数
+    setTimeout(() => {
+      actions.updateDocument({
+        panels: cleanedPanels,
+        template,
+        engine: { pxPerH: 100, snapMode: 'round' },
+      })
+      
+      // 等待layout生成完成
+      setTimeout(() => {
+        actions.switchToManual()
+        router.push('/editor')
+      }, 50)
+    }, 50)
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -137,6 +170,16 @@ export default function PlaygroundPage() {
             <p className="text-sm text-muted-foreground">Standalone D1-D4 Engine Testing</p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={handleSwitchToManual} 
+              disabled={!layout}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Edit3 className="h-4 w-4 mr-2" />
+              Switch to Manual Mode
+            </Button>
             <Button variant="outline" size="sm" onClick={handleDownloadConfig}>
               <FileJson className="h-4 w-4 mr-2" />
               Export Config

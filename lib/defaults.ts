@@ -17,28 +17,28 @@ export const DEFAULT_FONT_METRICS: FontMetrics = {
  * Default template parameters
  */
 export const DEFAULT_TEMPLATE: TemplateParams = {
-  // 基本间距
-  letter_height_h: 8,
-  line_spacing_h: 0.75,
-  group_spacing_h: 1.0,
-  board_pad_h: 1.0,
-  panel_spacing_h: 0.3,
-  corner_radius_h: 0.5,
-  border_h: 0.2,
+  // 基本间距 (符合AS 1742.6标准, 1h=100mm)
+  letter_height_h: 1.6,        // 160mm
+  line_spacing_h: 0.15,        // 15mm
+  group_spacing_h: 0.2,        // 20mm
+  board_pad_h: 0.2,            // 20mm
+  panel_spacing_h: 0.06,       // 6mm
+  corner_radius_h: 0.1,        // 10mm
+  border_h: 0.04,              // 4mm
 
   // Road Name样式
-  roadName_letter_height_h: 6,
+  roadName_letter_height_h: 1.2,  // 120mm
   roadName_bg_color: '#ffffff',
   roadName_text_color: '#000000',
-  roadName_pad_h: 0.5,
-  roadName_corner_radius_h: 0.3,
+  roadName_pad_h: 0.1,            // 10mm
+  roadName_corner_radius_h: 0.06, // 6mm
 
   // Road Number样式
-  roadNumber_letter_height_h: 7,
+  roadNumber_letter_height_h: 1.6, // 160mm
   roadNumber_bg_color: '#ffd700',
   roadNumber_text_color: '#000000',
-  roadNumber_pad_h: 0.3,
-  roadNumber_corner_radius_h: 0.2,
+  roadNumber_pad_h: 0.06,          // 6mm
+  roadNumber_corner_radius_h: 0.04,// 4mm
 
   // 字体
   font_series: 'E',
@@ -48,7 +48,7 @@ export const DEFAULT_TEMPLATE: TemplateParams = {
  * Default engine parameters
  */
 export const DEFAULT_ENGINE: EngineParams = {
-  pxPerH: 30,
+  pxPerH: 100,  // 统一使用100
   snapMode: 'round',
 }
 

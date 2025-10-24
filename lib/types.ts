@@ -177,6 +177,81 @@ export interface EngineParams {
   snapMode: 'none' | 'round' | 'half-pixel'
 }
 
+// ========== Manual Mode Types ==========
+
+/**
+ * Element types in manual mode
+ */
+export type ElementType = 'text' | 'roadName' | 'roadNumber' | 'shield' | 'arrow' | 'composite' | 'board'
+
+/**
+ * Element configuration
+ */
+export interface ElementConfig {
+  text?: string
+  fontSeries?: string
+  letter_h?: number
+  pad_h?: number
+  iconId?: string
+  label?: string
+  direction?: 'left' | 'right' | 'forward'
+}
+
+/**
+ * Staged element (waiting to be placed)
+ */
+export interface StagedElement {
+  id: string
+  type: ElementType
+  config: ElementConfig
+  preview: {
+    x: number
+    y: number
+    w: number
+    h: number
+  }
+}
+
+/**
+ * Placed element on canvas
+ */
+export interface PlacedElement {
+  id: string
+  type: ElementType
+  config: ElementConfig
+  box: {
+    x: number
+    y: number
+    w: number
+    h: number
+  }
+  groupId?: string
+}
+
+/**
+ * Manual layout data
+ */
+export interface ManualLayoutData {
+  staged: StagedElement[]
+  placed: PlacedElement[]
+  boardSize: { w: number; h: number }
+  alignmentConstraints?: AlignmentConstraint[]
+}
+
+/**
+ * Alignment constraint
+ */
+export interface AlignmentConstraint {
+  sourceId: string
+  targetId: string
+  type: 'align-left' | 'align-right' | 'align-center' | 'align-top' | 'align-bottom' | 'align-middle'
+}
+
+/**
+ * Alignment point type
+ */
+export type AlignmentPoint = 'left' | 'right' | 'center' | 'top' | 'bottom' | 'middle'
+
 /**
  * Sign document
  */
@@ -184,9 +259,11 @@ export interface SignDocument {
   id: string
   name: string
   signType: SignType
+  mode?: 'quick' | 'manual'
   panels: PanelInput[]
   template: TemplateParams
   engine: EngineParams
+  manualData?: ManualLayoutData
   createdAt: string
   updatedAt: string
 }

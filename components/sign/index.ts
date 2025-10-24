@@ -3,8 +3,18 @@
  * 业务组件统一导出
  */
 
-export { SignCanvas } from './SignCanvas'
-export { PanelEditor } from './PanelEditor'
-export { TemplateEditor } from './TemplateEditor'
-export { EngineEditor } from './EngineEditor'
+// 手动模式组件（Phase 3+）
+export { ResizableThreeColumn } from './ResizableThreeColumn'
+export { ElementLibrary } from './ElementLibrary'
+export { StagedElements } from './StagedElements'
+export { ManualCanvas } from './ManualCanvas'
+export { ElementConfigDialog } from './ElementConfigDialog'
+
+// Phase 5: 对齐系统
+export { AlignmentGuide } from './AlignmentGuide'
+export { QuickAlignButtons } from './QuickAlignButtons'
+export { SpacingWarning } from './SpacingWarning'
+
+// Phase 6: 工程图模式
+export { DimensionOverlay } from './DimensionOverlay'
 
